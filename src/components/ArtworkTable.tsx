@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DataTable } from 'primereact/datatable';
-import type { DataTablePageEvent, DataTableSelectionMultipleChangeEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
+import type { DataTableStateEvent } from 'primereact/datatable';
+
 import type { Artwork } from '../types/artwork';
 import { fetchArtworks } from '../api/artworkApi';
 import { useRowSelection } from '../hooks/useRowSelection';
@@ -15,12 +16,11 @@ export const ArtworkTable: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [allLoadedArtworks, setAllLoadedArtworks] = useState<Record<number, Artwork>>({});
   const [topNInput, setTopNInput] = useState(15);
   const [showDialog, setShowDialog] = useState(false);
 
-  const { selectedIds, selectionInfo, selectRows, deselectRows } = useRowSelection();
-  const currentPageSelections = artworks.filter(a => selectedIds.has(a.id));
+  const { selectRows, deselectRows } = useRowSelection();
+  const [selection, setSelection] = useState<Artwork[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -28,13 +28,6 @@ export const ArtworkTable: React.FC = () => {
       .then(({ data, pagination }) => {
         setArtworks(data);
         setTotalRecords(pagination.total);
-        setAllLoadedArtworks(prev => {
-          const updated = { ...prev };
-          data.forEach(item => {
-            updated[item.id] = item;
-          });
-          return updated;
-        });
       })
       .catch((error) => {
         console.error('Fetching artworks failed:', error);
@@ -44,115 +37,103 @@ export const ArtworkTable: React.FC = () => {
       .finally(() => setLoading(false));
   }, [page]);
 
-  const onPageChange = (event: DataTablePageEvent) => {
+  const onPageChange = (event: DataTableStateEvent) => {
     setPage(event.page ?? 0);
   };
 
-  const onSelectionChange = (event: DataTableSelectionMultipleChangeEvent<Artwork[]>) => {
-    const selectedFromCurrent = event.value ?? [];
-    const newlySelected = selectedFromCurrent.filter(a => !selectedIds.has(a.id));
-    const newlyDeselected = artworks.filter(
-      a => selectedIds.has(a.id) && !selectedFromCurrent.some(s => s.id === a.id)
-    );
-
-    if (newlySelected.length) {
-      selectRows(newlySelected.map(a => ({ id: a.id, title: a.title })));
-    }
-    if (newlyDeselected.length) {
-      deselectRows(newlyDeselected.map(a => a.id));
-    }
+  const onSelectionChange = (event: { value: Artwork[] }) => {
+    const selectedArtworks: Artwork[] = event.value ?? [];
+    setSelection(selectedArtworks);
+    selectRows(selectedArtworks.map(a => ({ id: a.id, title: a.title })));
   };
 
   const handleRemove = (id: number) => {
     deselectRows([id]);
+    setSelection(prev => prev.filter(a => a.id !== id));
   };
 
   const handleTopNSubmit = async () => {
-    setLoading(true)
+    setLoading(true);
     const pagesToLoad = Math.ceil(topNInput / ROWS_PER_PAGE);
     let combinedArtworks: Artwork[] = [];
-
     for (let i = 1; i <= pagesToLoad; i++) {
       const { data } = await fetchArtworks(i, ROWS_PER_PAGE);
       combinedArtworks = [...combinedArtworks, ...data];
     }
-
     const topN = combinedArtworks.slice(0, topNInput);
+    setSelection(topN);
     selectRows(topN.map(a => ({ id: a.id, title: a.title })));
-
-    setAllLoadedArtworks(prev => {
-      const updated = { ...prev };
-      topN.forEach(item => {
-        updated[item.id] = item;
-      });
-      return updated;
-    });
-    setLoading(false)
+    setLoading(false);
     setShowDialog(false);
   };
 
-  const dropdown = (
+  return (
     <div>
       <Button
-        icon="pi pi-chevron-down"
-        label=""
-        onClick={() => setShowDialog(true)}
+        label="Select Top N"
+        icon="pi pi-list"
         size="small"
+        onClick={() => setShowDialog(true)}
+        style={{ marginBottom: 14 }}
       />
       <Dialog
-        header="Select Top N Artworks"
         visible={showDialog}
-        style={{ width: '450px' }}
         onHide={() => setShowDialog(false)}
+        header="Select Top N Artworks"
         footer={
-          <div className="flex justify-end gap-2">
-            {/* <Button label="Cancel" icon="pi pi-times" onClick={() => setShowDialog(false)} className="p-button-text" /> */}
-            <Button label={loading?"wait...":"submit"} icon="pi pi-check" onClick={handleTopNSubmit} autoFocus />
-          </div>
+          <>
+            <Button label="Cancel" onClick={() => setShowDialog(false)} className="p-button-text"/>
+            <Button label="Select" onClick={handleTopNSubmit} disabled={loading}/>
+          </>
         }
       >
-        <div className="flex flex-col gap-3">
-          <label htmlFor="topN">Enter row</label>
+        <div>
+          <span>Enter row count: </span>
           <input
-            id="topN"
             type="number"
             min={1}
+            max={100}
             value={topNInput}
-            onChange={e => setTopNInput(Number(e.target.value))}
+            onChange={e => setTopNInput(Number((e.target as HTMLInputElement).value))}
             className="p-inputtext p-component"
+            style={{ width: 80 }}
           />
         </div>
       </Dialog>
-    </div>
-  );
-
-  return (
-    <div>
       <DataTable
         value={artworks}
+        loading={loading}
         paginator
         lazy
         rows={ROWS_PER_PAGE}
-        first={page * ROWS_PER_PAGE}
         totalRecords={totalRecords}
-        loading={loading}
+        first={page * ROWS_PER_PAGE}
         onPage={onPageChange}
-        selection={currentPageSelections}
+        selection={selection}
         onSelectionChange={onSelectionChange}
-        selectionMode="checkbox"
+        selectionMode="multiple"
         dataKey="id"
       >
-        <Column
-          selectionMode="multiple"
-          header={dropdown}
-          headerStyle={{ width: '1rem' }}
-        />
-        <Column field="title" header="Title" sortable />
-        <Column field="place_of_origin" header="Place of Origin" />
+        <Column selectionMode="multiple" headerStyle={{ width: '3em' }} />
+        <Column field="id" header="ID" style={{ width: 80 }} />
+        <Column field="title" header="Title" />
         <Column field="artist_display" header="Artist" />
-        <Column field="inscriptions" header="Inscriptions" />
-        <Column field="date_start" header="Date Start" sortable />
-        <Column field="date_end" header="Date End" sortable />
+        <Column field="place_of_origin" header="Origin" />
+        <Column field="date_start" header="Start" />
+        <Column field="date_end" header="End" />
+        <Column
+          header="Remove"
+          body={(rowData: Artwork) =>
+            selection.find(item => item.id === rowData.id) ? (
+              <Button
+                icon="pi pi-times"
+                className="p-button-rounded p-button-danger p-button-sm"
+                onClick={() => handleRemove(rowData.id)}
+              />
+            ) : null
+          }
+          style={{ width: 70, textAlign: 'center' }}
+        />
       </DataTable>
     </div>
   );
