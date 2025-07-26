@@ -1,12 +1,12 @@
-import React from 'react'
-import {Artwork} from './components/Artwork'
+import React from 'react';
+import { ArtworkTable } from './components/ArtworkTable';
 
-const App = () => {
+function App() {
   return (
-    <div>
-      <Artwork/>
+    <div className="App">
+      <h2>Artworks List</h2>
+      <ArtworkTable />
     </div>
-  )
+  );
 }
-
-export default App
+export default App;
