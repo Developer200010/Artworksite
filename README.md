@@ -1,69 +1,43 @@
-# React + TypeScript + Vite
+# 🎨 Artwork Explorer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to **Artwork Explorer**, a modern, interactive React + PrimeReact application built to explore and analyze artworks using the [Art Institute of 
+This project follows the *Feynman Technique* — focused on deep understanding by building step-by-step.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## Expanding the ESLint configuration
+- 📦 **Lazy Data Fetching** with pagination from live API
+- ✅ **Persisted Row Selection** across paginated tables
+- ⬆️ **Top-N Selector** with input-driven logic using PrimeReact Dialog
+- 📊 **Sortable Columns** for better analysis
+- 💡 Clean architecture using hooks for separation of concerns
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🧠 Feynman Approach
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+| Phase        | Description                                                  |
+|--------------|--------------------------------------------------------------|
+| **1. Structure**    | Setup Vite + React + TypeScript + PrimeReact                  |
+| **2. Fetching**     | API integration using `axios` and error handling             |
+| **3. UI Layer**     | Table rendering with PrimeReact's DataTable                  |
+| **4. Pagination**   | Lazy loading and server-side paginated data                |
+| **5. Checkbox**     | Row selection logic with persistent storage (per ID)       |
+| **6. Advanced UI**  | Dropdown + Dialog for top-N row selection across pages     |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Node.js v18+
+- npm or yarn
+
+### Installation
+
+```bash
+git clone https://github.com/Developer200010/Artworksite
+cd Artworksite
+npm install
