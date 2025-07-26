@@ -11,7 +11,11 @@ export const Artwork: React.FC = () => {
     const [totalRecords, setTotalRecords] = useState(0);
 
     //selecting checkbox 
-    const [selectedArtworks, setSelectedArtworks] = useState<ArtworkType[]>([])
+    // const [selectedArtworks, setSelectedArtworks] = useState<ArtworkType[]>([]);
+
+    //creating a dictionary to persist selected row by ID.
+    const [selectedMap, setSelectedMap] = useState<Record<number,ArtworkType>>({});
+    console.log(selectedMap)
     async function loadArtworks(pageIndex = 0) {
         setLoading(true);
         try {
@@ -29,13 +33,33 @@ export const Artwork: React.FC = () => {
 
         loadArtworks(page)
     }, [page])
+
+    //converting object to an array
+
+    const selectedArtworks = Object.values(selectedMap);
+
+    // handle check toggle
+    const onSelectionChange = (e: {value:ArtworkType[]}) =>{
+        const updateMap : Record<number, ArtworkType> = {...selectedMap};
+        const currentPageId = new Set(artwork.map((a)=>a.id));
+
+        for(const id of currentPageId){
+            delete updateMap[id]
+        }
+
+        for(const item of e.value){
+            updateMap[item.id] = item
+        }
+        setSelectedMap(updateMap)
+    }
+
     return (
         <div className="card">
             <h3>Artwork table details</h3>
             <DataTable
                 value={artwork}
                 selection={selectedArtworks}
-                onSelectionChange={(e)=> setSelectedArtworks(e.value)}
+                onSelectionChange={onSelectionChange}
                 loading={loading}
                 lazy
                 paginator
